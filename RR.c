@@ -48,7 +48,7 @@ void GetTime(pid_t pid);
 void FIFO(Queue_T* P_Queue, int Process_Num);
 void RR(Queue_T* P_Queue, int Process_Num);
 void delay(int unit);
-void simuTime(pid_t pid, int time);
+void simuTime(char pname[], int time);
 //---------------------------------------
 List newList();
 void addList(List* reserve_Queue, Node* p_new);
@@ -102,8 +102,6 @@ void FIFO(Queue_T* P_Queue, int Process_Num){
 
 void RR(Queue_T* P_Queue, int Process_Num){
 	int quantum = 500;
-	printf("Start: ");
-	GetTime(1);
 
 	Remain* residue = (Remain*)malloc(sizeof(Remain)*(10*Process_Num));
 
@@ -111,6 +109,7 @@ void RR(Queue_T* P_Queue, int Process_Num){
 	int time = 0; //對應標準時間單位參照進程
 	int residue_count = 0;
 	for(int i = 0; i < Process_Num; i++){
+		GetTime(1);
 		pid = fork();
 
 		if(pid < 0){
@@ -126,18 +125,20 @@ void RR(Queue_T* P_Queue, int Process_Num){
 			//執行不完，加入residue待執行，stop
 			if(P_Queue[i].exec_time <= 500){
 				delay(P_Queue[i].exec_time);
+				time += P_Queue[i].exec_time;
 				GetTime(getpid());
-				simuTime(getpid(),time);
+				simuTime(P_Queue[i].pname , time);
 				exit(NULL);
 			}
 			else if(P_Queue[i].exec_time > 500){
 				delay(quantum);
+				time += 500;
 				residue[residue_count].pid = getpid();
 				residue[residue_count].rm_time = 
 					P_Queue[i].exec_time - 500;
 				residue_count ++;
 				GetTime(getpid());
-				simuTime(getpid(),time);
+				simuTime(P_Queue[i].pname , time);
 				kill(getpid(), SIGSTOP);
 				exit(NULL);
 			}
@@ -168,6 +169,8 @@ void RR(Queue_T* P_Queue, int Process_Num){
 				printf("Father Err %d\n", i);
 			}
 		}
+
+		printf("Process %d ok\n", i);
 	}
 
 	for(int i = 0; i < residue_count; i++){
@@ -178,7 +181,6 @@ void RR(Queue_T* P_Queue, int Process_Num){
 
 	puts("End");
 	GetTime(1);
-	simuTime(1, time);
 }
 
 void GetTime(pid_t pid)
@@ -195,9 +197,9 @@ void GetTime(pid_t pid)
     // }
 }
 
-void simuTime(pid_t pid, int time){
+void simuTime(char pname[], int time){
 	printf("[Project1] ");
-    printf("pid:%d ", pid);
+    printf("pid:%s ", pname);
     printf("time: %d\n",time);
 }
 
