@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/types.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <errno.h>
 #include <string.h>
 #include <sched.h>
 #include <unistd.h>
@@ -161,6 +164,11 @@ void RR(Queue_T* P_Queue, int Process_Num){
 				printf("Father Err %d\n", i);
 			}
 		}
+	}
+
+	for(int i = 0; i < residue_count; i++){
+		printf("residue %d pid: %d, remain time: %d\n",
+			i, residue[i].pid, residue[i].rm_time );
 	}
 }
 
