@@ -48,6 +48,7 @@ void GetTime(pid_t pid);
 void FIFO(Queue_T* P_Queue, int Process_Num);
 void RR(Queue_T* P_Queue, int Process_Num);
 void delay(int unit);
+void simuTime(pid_t pid, int time);
 //---------------------------------------
 List newList();
 void addList(List* reserve_Queue, Node* p_new);
@@ -126,6 +127,7 @@ void RR(Queue_T* P_Queue, int Process_Num){
 			if(P_Queue[i].exec_time <= 500){
 				delay(P_Queue[i].exec_time);
 				GetTime(getpid());
+				simuTime(getpid(),time);
 				exit(NULL);
 			}
 			else if(P_Queue[i].exec_time > 500){
@@ -135,7 +137,9 @@ void RR(Queue_T* P_Queue, int Process_Num){
 					P_Queue[i].exec_time - 500;
 				residue_count ++;
 				GetTime(getpid());
+				simuTime(getpid(),time);
 				kill(getpid(), SIGSTOP);
+				exit(NULL);
 			}
 			else{
 				printf("Process err $d\n", i);
@@ -169,7 +173,12 @@ void RR(Queue_T* P_Queue, int Process_Num){
 	for(int i = 0; i < residue_count; i++){
 		printf("residue %d pid: %d, remain time: %d\n",
 			i, residue[i].pid, residue[i].rm_time );
+		kill(residue[i].pid, SIGCONT);
 	}
+
+	puts("End");
+	GetTime(1);
+	simuTime(1, time);
 }
 
 void GetTime(pid_t pid)
@@ -184,6 +193,12 @@ void GetTime(pid_t pid)
     // {
     //     int x = 90;
     // }
+}
+
+void simuTime(pid_t pid, int time){
+	printf("[Project1] ");
+    printf("pid:%d ", pid);
+    printf("time: %d\n",time);
 }
 
 void delay(int unit){
