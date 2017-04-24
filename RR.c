@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sched.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define POLICY_LEN 10
 
@@ -49,6 +50,7 @@ void FIFO(Queue_T* P_Queue, int Process_Num);
 void RR(Queue_T* P_Queue, int Process_Num);
 void delay(int unit);
 void simuTime(char pname[], int time);
+void log_residue(pid_t pid, int residue_time);
 //---------------------------------------
 List newList();
 void addList(List* reserve_Queue, Node* p_new);
@@ -105,7 +107,7 @@ void RR(Queue_T* P_Queue, int Process_Num){
 
 	Remain* residue = (Remain*)malloc(sizeof(Remain)*(10*Process_Num));
 
-	pid_t pid;
+	pid_t pid, status;
 	int time = 0; //對應標準時間單位參照進程
 	int residue_count = 0;
 	for(int i = 0; i < Process_Num; i++){
@@ -115,7 +117,7 @@ void RR(Queue_T* P_Queue, int Process_Num){
 		if(pid < 0){
 	 		puts("Error pid");
 		}
-		else if(pid == 0){
+		else if(pid == 0){ //Child
 			//到了沒
 			if(time < P_Queue[i].ready_time){
 				//等待行程到達
@@ -126,20 +128,18 @@ void RR(Queue_T* P_Queue, int Process_Num){
 			if(P_Queue[i].exec_time <= 500){
 				delay(P_Queue[i].exec_time);
 				time += P_Queue[i].exec_time;
-				GetTime(getpid());
+				//GetTime(getpid());
 				simuTime(P_Queue[i].pname , time);
 				exit(NULL);
 			}
 			else if(P_Queue[i].exec_time > 500){
 				delay(quantum);
 				time += 500;
-				residue[residue_count].pid = getpid();
-				residue[residue_count].rm_time = 
-					P_Queue[i].exec_time - 500;
-				residue_count ++;
-				GetTime(getpid());
+				//行程t > 500 儲存進度
+				log_residue(getpid, P_Queue[i].exec_time - 500);
+				
 				simuTime(P_Queue[i].pname , time);
-				kill(getpid(), SIGSTOP);
+				//kill(getpid(), SIGSTOP);
 				exit(NULL);
 			}
 			else{
@@ -147,7 +147,8 @@ void RR(Queue_T* P_Queue, int Process_Num){
 				exit(NULL);
 			}
 		}
-		if(pid > 0){
+		if(pid > 0){	//Father
+			pid_t cpid;
 			//這個行程到了沒
 			if(time < P_Queue[i].ready_time){
 				//等待行程到達
@@ -157,17 +158,20 @@ void RR(Queue_T* P_Queue, int Process_Num){
 			//能夠執行完畢，等待
 			//做不完，等待500後繼續
 			if(P_Queue[i].exec_time <= 500){
-				wait(NULL);
+				cpid = wait(NULL);
 				time += P_Queue[i].exec_time;
 
 			}
 			else if(P_Queue[i].exec_time > 500){
 				delay(500);
 				time += 500;
+				cpid = waitpid(pid, &status ,WUNTRACED);
 			}
 			else{
 				printf("Father Err %d\n", i);
 			}
+
+			GetTime(cpid);
 		}
 
 		printf("Process %d ok\n", i);
@@ -190,11 +194,6 @@ void GetTime(pid_t pid)
     printf("[Project1] ");
     printf("pid:%d ", pid);
     printf("time: %lu\n",t);
-    //int i;
-    // for(i = 0; i < 1000000; i++)
-    // {
-    //     int x = 90;
-    // }
 }
 
 void simuTime(char pname[], int time){
@@ -206,6 +205,13 @@ void simuTime(char pname[], int time){
 void delay(int unit){
 	volatile unsigned long i;
 	for(i = 0; i < 1000000UL*unit ;i++);
+}
+
+void log_residue(pid_t pid, int residue_time){
+	FILE *in;
+	in = fopen("residue_Queue.txt","a");
+	fprintf(in,"%d %d\n", pid, residue_time);
+	close(in);
 }
 
 //---------------------------------------------
