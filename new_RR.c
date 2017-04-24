@@ -213,17 +213,17 @@ void RR(Queue_T* P_Queue, int Process_Num){
 
 			if(RR_Queue[i].rm_time <= 500){
 				time += RR_Queue[i].rm_time;
-				wait(NULL);
+				cpid = wait(NULL);
 			}
 			else if(RR_Queue[i].rm_time > 500){
 				time += 500;
-				waitpid(pid, NULL ,WUNTRACED);
+				cpid = waitpid(pid, NULL ,WUNTRACED);
 			}
 			else{
 				puts("wait Err\n");
 				wait(NULL);
 			}
-			GetTime(RR_Queue[i].pid);
+			GetTime(cpid);
 		}
 
 		free(RR_Queue);
