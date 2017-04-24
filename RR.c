@@ -136,9 +136,12 @@ void RR(Queue_T* P_Queue, int Process_Num){
 				while(P_Queue[i].exec_time > 500){
 					delay(quantum);
 					time += 500;
+					int the_residue = P_Queue[i].exec_time -500;
 					//行程t > 500 儲存進度
-					log_residue(getpid(), P_Queue[i].exec_time - 500);
-					P_Queue[i].exec_time -= 500;
+					log_residue(getpid(), the_residue);
+					P_Queue[i].exec_time = the_residue;
+					printf("store residue pid:%d  rm_time:%d\n",
+							getpid(), the_residue );
 					
 					simuTime(P_Queue[i].pname , time);
 					kill(getpid(), SIGSTOP);
@@ -174,8 +177,8 @@ void RR(Queue_T* P_Queue, int Process_Num){
 			//做不完，等待500後繼續
 			else if(P_Queue[i].exec_time > 500){
 				time += 500;
-				//cpid = waitpid(pid, &status ,WUNTRACED);
-				cpid = wait(NULL);
+				cpid = waitpid(pid, &status ,WUNTRACED);
+				//cpid = wait(NULL);
 			}
 			else{
 				printf("Father Err %d\n", i);
@@ -191,11 +194,12 @@ void RR(Queue_T* P_Queue, int Process_Num){
 	puts("RR Query start");
 	FILE *read;
 	read = fopen("residue_Queue.txt","r");
-	Remain* RR_Queue = (Remain*)malloc(sizeof(Remain)*Process_Num);
 
 	while(1){
 		int count = 0;
-		while( fscanf(" %d %d",
+		Remain* RR_Queue = (Remain*)malloc(sizeof(Remain)*Process_Num);
+
+		while( fscanf(read," %d %d",
 						&(RR_Queue[count].pid),
 						&(RR_Queue[count].rm_time) != EOF)) count++;
 		log_residue(0,0); //清空資料
@@ -213,11 +217,17 @@ void RR(Queue_T* P_Queue, int Process_Num){
 				time += 500;
 				cpid = waitpid(pid, &status ,WUNTRACED);
 			}
+			else{
+				puts("wait Err\n");
+				wait(NULL);
+			}
 			GetTime(cpid);
 		}
+
+		free(RR_Queue);
 	}
 
-
+	close(read);
 	puts("------End-------");
 	GetTime(1);
 }
@@ -244,7 +254,7 @@ void delay(int unit){
 
 void log_residue(pid_t pid, int residue_time){
 	FILE *in;
-	if(pid == 0){
+	if(residue_time == 0){
 		in = fopen("residue_Queue.txt","w");
 		fprintf(in, "");
 		close(in);
