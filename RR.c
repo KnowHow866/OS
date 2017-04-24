@@ -111,7 +111,7 @@ void RR(Queue_T* P_Queue, int Process_Num){
 	int time = 0; //對應標準時間單位參照進程
 	int residue_count = 0;
 	for(int i = 0; i < Process_Num; i++){
-		GetTime(1);
+		//GetTime(1);
 		pid = fork();
 
 		if(pid < 0){
@@ -136,7 +136,7 @@ void RR(Queue_T* P_Queue, int Process_Num){
 				delay(quantum);
 				time += 500;
 				//行程t > 500 儲存進度
-				log_residue(getpid, P_Queue[i].exec_time - 500);
+				log_residue(getpid(), P_Queue[i].exec_time - 500);
 				
 				simuTime(P_Queue[i].pname , time);
 				//kill(getpid(), SIGSTOP);
@@ -165,7 +165,8 @@ void RR(Queue_T* P_Queue, int Process_Num){
 			else if(P_Queue[i].exec_time > 500){
 				delay(500);
 				time += 500;
-				cpid = waitpid(pid, &status ,WUNTRACED);
+				//cpid = waitpid(pid, &status ,WUNTRACED);
+				cpid = wait(NULL);
 			}
 			else{
 				printf("Father Err %d\n", i);
