@@ -197,7 +197,7 @@ void RR(Queue_T* P_Queue, int Process_Num){
 		int count = 0;
 		while( fscanf(" %d %d",
 						&(RR_Queue[count].pid),
-						&(RR_Queue[count.rm_time]) != EOF)) count++;
+						&(RR_Queue[count].rm_time) != EOF)) count++;
 		log_residue(0,0); //清空資料
 		if(count == 0) break;
 
