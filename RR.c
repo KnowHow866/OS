@@ -145,6 +145,7 @@ void RR(Queue_T* P_Queue, int Process_Num){
 					
 					simuTime(P_Queue[i].pname , time);
 					kill(getpid(), SIGSTOP);
+					printf("pid:%d live again\n",getpid());
 					//exit(NULL);
 				}
 				if(P_Queue[i].exec_time <= 500){
@@ -177,7 +178,7 @@ void RR(Queue_T* P_Queue, int Process_Num){
 			//做不完，等待500後繼續
 			else if(P_Queue[i].exec_time > 500){
 				time += 500;
-				cpid = waitpid(pid, &status ,WUNTRACED);
+				cpid = waitpid(pid, NULL ,WUNTRACED);
 				//cpid = wait(NULL);
 			}
 			else{
@@ -215,7 +216,7 @@ void RR(Queue_T* P_Queue, int Process_Num){
 			}
 			else if(RR_Queue[i].rm_time > 500){
 				time += 500;
-				cpid = waitpid(pid, &status ,WUNTRACED);
+				cpid = waitpid(pid, NULL ,WUNTRACED);
 			}
 			else{
 				puts("wait Err\n");
