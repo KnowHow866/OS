@@ -203,7 +203,7 @@ void RR(Queue_T* P_Queue, int Process_Num){
 
 		while( fscanf(read," %d %d",
 						&(RR_Queue[count].pid),
-						&(RR_Queue[count].rm_time) != EOF)) count++;
+						&(RR_Queue[count].rm_time)) != EOF) count++;
 		log_residue(0,0); //清空資料
 		if(count == 0) break;
 
@@ -229,7 +229,7 @@ void RR(Queue_T* P_Queue, int Process_Num){
 		free(RR_Queue);
 	}
 
-	close(read);
+	fclose(read);
 	puts("------End-------");
 	GetTime(1);
 }
@@ -259,12 +259,12 @@ void log_residue(pid_t pid, int residue_time){
 	if(residue_time == 0){
 		in = fopen("residue_Queue.txt","w");
 		fprintf(in, "");
-		close(in);
+		fclose(in);
 	}
 	else{
 		in = fopen("residue_Queue.txt","a");
 		fprintf(in,"%d %d\n", pid, residue_time);
-		close(in);
+		fclose(in);
 	}
 }
 
