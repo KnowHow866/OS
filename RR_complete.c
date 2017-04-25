@@ -141,12 +141,10 @@ void RR(Queue_T* P_Queue, int Process_Num){
 					//行程t > 500 儲存進度
 					log_residue(me_pid, the_residue);
 					P_Queue[i].exec_time = the_residue;
-					printf("store residue pid:%d  rm_time:%d\n",
-							me_pid, the_residue );
+
 					delay(quantum);
 					//simuTime(P_Queue[i].pname , time);
 					kill(getpid(), SIGSTOP);
-					printf("pid:%d live again\n",me_pid);
 					//exit(NULL);
 				}
 				if(P_Queue[i].exec_time <= 500){
@@ -172,29 +170,28 @@ void RR(Queue_T* P_Queue, int Process_Num){
 			}
 			//能夠執行完畢，等待
 			if(P_Queue[i].exec_time <= 500){
+				delay(P_Queue[i].exec_time);
 				cpid = wait(NULL);
 				time += P_Queue[i].exec_time;
-				simuTime(P_Queue[i].pname, time);
 			}
 			//做不完，等待500後繼續
 			else if(P_Queue[i].exec_time > 500){
 				time += 500;
+				delay(quantum);
 				cpid = waitpid(pid, NULL ,WUNTRACED);
-				simuTime(P_Queue[i].pname, time);
 				//cpid = wait(NULL);
 			}
 			else{
 				printf("Father Err %d\n", i);
 			}
 			//輸出系統時間
+			//simuTime(P_Queue[i].pname, time);
 			GetTime(cpid);
 		}
 
-		printf("Process %d ok\n", i);
 	}
 
 	 //當residue_Queue檔案還有pid-time值組，RR輪詢
-	puts("RR Query start");
 	FILE *read;
 	read = fopen("residue_Queue.txt","r");
 	//puts("file is open");
@@ -211,20 +208,18 @@ void RR(Queue_T* P_Queue, int Process_Num){
 		log_residue(0,0); //清空資料
 		if(count == 0) break;
 
-		puts("start SIGCONT child");
 		for(int i = 0; i < count; i++){
 			pid_t cpid; //回傳子行程pid
 			kill(RR_Queue[i].pid, SIGCONT);
 
 			if(RR_Queue[i].rm_time <= 500){
 				time += RR_Queue[i].rm_time;
-				printf("wait for pid %d\n",RR_Queue[i].pid);
 				delay(RR_Queue[i].rm_time);
 				wait(NULL);
 			}
 			else if(RR_Queue[i].rm_time > 500){
 				time += 500;
-				printf("wait for pid %d\n",RR_Queue[i].pid);
+				//printf("wait for pid %d\n",RR_Queue[i].pid);
 				delay(500);
 				waitpid(pid, NULL ,WUNTRACED);
 			}
@@ -241,8 +236,6 @@ void RR(Queue_T* P_Queue, int Process_Num){
 	}
 
 	fclose(read);
-	puts("------End-------");
-	//GetTime(1);
 }
 
 void GetTime(pid_t pid)
@@ -268,54 +261,17 @@ void delay(int unit){
 void log_residue(int pid, int residue_time){
 	FILE *in;
 	if(residue_time == 0){
-		puts("log residue cleaning------------------");
 		in = fopen("residue_Queue.txt","w");
 		fprintf(in, "");
 		fclose(in);
 	}
 	else{
-		puts("log_residue write");
-		printf("_________________pid:%d  rm_time:%d\n",pid, residue_time);
 		in = fopen("residue_Queue.txt","a");
 		fprintf(in,"%d %d\n", pid, residue_time);
 		fclose(in);
 	}
 }
 
-//---------------------------------------------
-List newList(){
-	puts("ready newList");
-	List new;
-	new.entry->next = new.end;
-	new.end->prev = new.entry;
-	puts("OK newList");
-	return new;
-}
 
-void addList(List* reserve_Queue, Node* p_new){
-	p_new->next = reserve_Queue->entry->next;
-	reserve_Queue->entry->next->prev = p_new;
 
-	reserve_Queue->entry->next = p_new;
-	p_new->prev = reserve_Queue->entry;
-}
-
-Node consumeList(List* reserve_Queue){
-	if(isEmpty(reserve_Queue)){
-		puts("list empty err");
-		Node no;
-		return no;
-	}
-	else{
-		Node* tmp= reserve_Queue->end->prev;
-		reserve_Queue->end->prev = reserve_Queue->end->prev->prev;
-		reserve_Queue->end->prev->prev->next = reserve_Queue->end->prev;
-		return *tmp;
-	}
-}
-
-int isEmpty(List* reserve_Queue){
-	if(reserve_Queue->entry->next == reserve_Queue->end) return 1;
-	else return 0;
-}
 

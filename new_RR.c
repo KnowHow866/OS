@@ -141,13 +141,9 @@ void RR(Queue_T* P_Queue, int Process_Num){
 					//行程t > 500 儲存進度
 					log_residue(me_pid, the_residue);
 					P_Queue[i].exec_time = the_residue;
-					printf("store residue pid:%d  rm_time:%d\n",
-							me_pid, the_residue );
 					
 					simuTime(P_Queue[i].pname , time);
-					kill(getpid(), SIGSTOP);
-					printf("pid:%d live again\n",me_pid);
-					//exit(NULL);
+					exit(NULL);
 				}
 				if(P_Queue[i].exec_time <= 500){
 					delay(P_Queue[i].exec_time);
@@ -179,8 +175,7 @@ void RR(Queue_T* P_Queue, int Process_Num){
 			//做不完，等待500後繼續
 			else if(P_Queue[i].exec_time > 500){
 				time += 500;
-				cpid = waitpid(pid, NULL ,WUNTRACED);
-				//cpid = wait(NULL);
+				cpid = wait(NULL);
 			}
 			else{
 				printf("Father Err %d\n", i);
