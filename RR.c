@@ -128,13 +128,13 @@ void RR(Queue_T* P_Queue, int Process_Num){
 				delay(P_Queue[i].exec_time);
 				time += P_Queue[i].exec_time;
 				//GetTime(getpid());
-				simuTime(P_Queue[i].pname , time);
+				//simuTime(P_Queue[i].pname , time);
 				exit(NULL);
 			}
 			//執行不完，加入residue待執行，stop
 			else if(P_Queue[i].exec_time > 500){
 				while(P_Queue[i].exec_time > 500){
-					delay(quantum);
+					//delay(quantum);
 					time += 500;
 					int me_pid = getpid();
 					int the_residue = P_Queue[i].exec_time -500;
@@ -143,8 +143,8 @@ void RR(Queue_T* P_Queue, int Process_Num){
 					P_Queue[i].exec_time = the_residue;
 					printf("store residue pid:%d  rm_time:%d\n",
 							me_pid, the_residue );
-					
-					simuTime(P_Queue[i].pname , time);
+					delay(quantum);
+					//simuTime(P_Queue[i].pname , time);
 					kill(getpid(), SIGSTOP);
 					printf("pid:%d live again\n",me_pid);
 					//exit(NULL);
@@ -153,7 +153,7 @@ void RR(Queue_T* P_Queue, int Process_Num){
 					delay(P_Queue[i].exec_time);
 					time += P_Queue[i].exec_time;
 					//GetTime(getpid());
-					simuTime(P_Queue[i].pname , time);
+					//simuTime(P_Queue[i].pname , time);
 					exit(NULL);
 				}
 			}
@@ -174,12 +174,13 @@ void RR(Queue_T* P_Queue, int Process_Num){
 			if(P_Queue[i].exec_time <= 500){
 				cpid = wait(NULL);
 				time += P_Queue[i].exec_time;
-
+				simuTime(P_Queue[i].pname, time);
 			}
 			//做不完，等待500後繼續
 			else if(P_Queue[i].exec_time > 500){
 				time += 500;
 				cpid = waitpid(pid, NULL ,WUNTRACED);
+				simuTime(P_Queue[i].pname, time);
 				//cpid = wait(NULL);
 			}
 			else{
@@ -196,42 +197,55 @@ void RR(Queue_T* P_Queue, int Process_Num){
 	puts("RR Query start");
 	FILE *read;
 	read = fopen("residue_Queue.txt","r");
+	//puts("file is open");
 
 	while(1){
 		int count = 0;
 		Remain* RR_Queue = (Remain*)malloc(sizeof(Remain)*Process_Num);
+		//puts("RR_Queue builded");
 
 		while( fscanf(read," %d %d",
 						&(RR_Queue[count].pid),
 						&(RR_Queue[count].rm_time)) != EOF) count++;
+<<<<<<< HEAD
+=======
+		//puts("read data ready");
+>>>>>>> PJFS
 		log_residue(0,0); //清空資料
 		if(count == 0) break;
 
+		puts("start SIGCONT child");
 		for(int i = 0; i < count; i++){
 			pid_t cpid; //回傳子行程pid
 			kill(RR_Queue[i].pid, SIGCONT);
 
 			if(RR_Queue[i].rm_time <= 500){
 				time += RR_Queue[i].rm_time;
+				printf("wait for pid %d\n",RR_Queue[i].pid);
+				delay(RR_Queue[i].rm_time);
 				wait(NULL);
 			}
 			else if(RR_Queue[i].rm_time > 500){
 				time += 500;
+				printf("wait for pid %d\n",RR_Queue[i].pid);
+				delay(500);
 				waitpid(pid, NULL ,WUNTRACED);
 			}
 			else{
 				puts("wait Err\n");
 				wait(NULL);
 			}
+
 			GetTime(RR_Queue[i].pid);
 		}
 
 		free(RR_Queue);
+		//break;
 	}
 
 	fclose(read);
 	puts("------End-------");
-	GetTime(1);
+	//GetTime(1);
 }
 
 void GetTime(pid_t pid)
@@ -254,14 +268,17 @@ void delay(int unit){
 	for(i = 0; i < 1000000UL*unit ;i++);
 }
 
-void log_residue(pid_t pid, int residue_time){
+void log_residue(int pid, int residue_time){
 	FILE *in;
 	if(residue_time == 0){
+		puts("log residue cleaning------------------");
 		in = fopen("residue_Queue.txt","w");
 		fprintf(in, "");
 		fclose(in);
 	}
 	else{
+		puts("log_residue write");
+		printf("_________________pid:%d  rm_time:%d\n",pid, residue_time);
 		in = fopen("residue_Queue.txt","a");
 		fprintf(in,"%d %d\n", pid, residue_time);
 		fclose(in);
